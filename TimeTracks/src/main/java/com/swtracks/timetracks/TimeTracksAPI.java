@@ -18,22 +18,44 @@ public class TimeTracksAPI {
     private JSONParser parser;
     private String server, username, password, account, device;
     private String SUCCESS = "success";
+    private SharedPreferences settings;
 
 
     public TimeTracksAPI(Context c){
         parser = new JSONParser(c);
 
-        SharedPreferences settings = c.getSharedPreferences("userinfo", Context.MODE_PRIVATE);
-        username = settings.getString("username", "nlayne");
-        password = settings.getString("password", "qwerty789");
-        account = settings.getString("account", "1000");
-        server = settings.getString("server", "http://10.0.2.2:1390");
+        settings = c.getSharedPreferences("userinfo", Context.MODE_PRIVATE);
+        username = settings.getString("username", "");
+        password = settings.getString("password", "");
+        account = settings.getString("account", "");
         device = settings.getString("device", "e5b425b2-a7cd-489f-bf45-ceb28691bd35");
+
+        // Set server string.
+        String domain = settings.getString("domain", "http://10.0.2.2");
+        String port = settings.getString("port", "1390");
+        server = String.format("%s:%s", domain, port);
     }
 
-    public Boolean Login(){
-        return Login(username, password, account);
+    public Boolean Autologin(){
+        // See if we are loggedin
+        JSONObject json = parser.getJSONFromUrl(server + "/api/userinfo");
+        try {
+            if (json.getString("status").equals(SUCCESS)){
+                return true;
+            }
+        } catch (JSONException e) {
+            Log.i("API Error", e.getMessage());
+            return false;
+        }
+
+        // Try to login with stored credentials (if we have any)
+        if (!username.isEmpty() && !password.isEmpty() && !account.isEmpty()) {
+            return Login(username, password, account);
+        } else {
+            return false;
+        }
     }
+
     public Boolean Login(String un, String pw, String ac){
         List<NameValuePair> postData = new ArrayList<NameValuePair>();
         postData.add(new BasicNameValuePair("un", un));
@@ -42,12 +64,23 @@ public class TimeTracksAPI {
 
         try {
             JSONObject json = parser.getJSONFromUrl(server + "/api/login", postData);
-            Log.i("Login", json.getString("status"));
-            return json.getString("status").equals(SUCCESS);
+            if (json.getString("status").equals(SUCCESS)) {
+
+                // If we were able to login then store credentials.
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("username", un);
+                editor.putString("password", pw);
+                editor.putString("account", ac);
+                editor.commit();
+
+                return true;
+            }
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
             return false;
         }
+
+        return false;
     }
 
     public Boolean Logout() {
@@ -112,13 +145,12 @@ public class TimeTracksAPI {
             JSONObject json = parser.getJSONFromUrl(server + "/api/userinfo");
             JSONObject data = json.getJSONObject("data");
 
-            String info = String.format("Logged in as %s (%d) for %s (%d)",
+            return String.format("Logged in as %s (%d) for %s (%d)",
                     data.getString("username"),
                     data.getInt("userID"),
                     data.getString("accountName"),
                     data.getInt("accountID")
             );
-            return info;
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
             return "";

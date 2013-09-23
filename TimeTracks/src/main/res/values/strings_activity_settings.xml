@@ -1,0 +1,8 @@
+<resources>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_domain">Domain</string>
+    <string name="prompt_port">Port (leave blank for none)</string>
+    <string name="action_save_settings">Save</string>
+</resources>

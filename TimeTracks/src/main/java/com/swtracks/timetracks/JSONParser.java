@@ -63,11 +63,11 @@ public class JSONParser {
             is = httpEntity.getContent();
 
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            return null;
         } catch (ClientProtocolException e) {
-            e.printStackTrace();
+            return null;
         } catch (IOException e) {
-            e.printStackTrace();
+            return null;
         }
 
         try {
@@ -93,6 +93,5 @@ public class JSONParser {
 
         // return JSON String
         return jObj;
-
     }
 }

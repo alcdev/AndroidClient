@@ -20,7 +20,6 @@ public class TimeTracksAPI {
     private String SUCCESS = "success";
     private SharedPreferences settings;
 
-
     public TimeTracksAPI(Context c){
         parser = new JSONParser(c);
 
@@ -31,9 +30,11 @@ public class TimeTracksAPI {
         device = settings.getString("device", "e5b425b2-a7cd-489f-bf45-ceb28691bd35");
 
         // Set server string.
+        // TODO: check that we're using a port.
         String domain = settings.getString("domain", "http://10.0.2.2");
         String port = settings.getString("port", "1390");
         server = String.format("%s:%s", domain, port);
+        Log.i("API Server", server);
     }
 
     public Boolean Autologin(){
@@ -45,6 +46,9 @@ public class TimeTracksAPI {
             }
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
+            return false;
+        } catch (NullPointerException e) {
+            Log.i("API Error", "Null from HTTP request, likely a timeout.");
             return false;
         }
 
@@ -78,6 +82,9 @@ public class TimeTracksAPI {
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
             return false;
+        } catch (NullPointerException e) {
+            Log.i("API Error", "Null from HTTP request, likely a timeout.");
+            return false;
         }
 
         return false;
@@ -89,6 +96,9 @@ public class TimeTracksAPI {
             return json.getString("status").equals(SUCCESS);
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
+            return false;
+        } catch (NullPointerException e) {
+            Log.i("API Error", "Null from HTTP request, likely a timeout.");
             return false;
         }
     }
@@ -106,6 +116,9 @@ public class TimeTracksAPI {
             return json.getString("status").equals(SUCCESS);
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
+            return false;
+        } catch (NullPointerException e) {
+            Log.i("API Error", "Null from HTTP request, likely a timeout.");
             return false;
         }
     }
@@ -137,6 +150,9 @@ public class TimeTracksAPI {
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
             return null;
+        } catch (NullPointerException e) {
+            Log.i("API Error", "Null from HTTP request, likely a timeout.");
+            return null;
         }
     }
 
@@ -144,15 +160,20 @@ public class TimeTracksAPI {
         try {
             JSONObject json = parser.getJSONFromUrl(server + "/api/userinfo");
             JSONObject data = json.getJSONObject("data");
+            Log.i("data", data.toString());
 
-            return String.format("Logged in as %s (%d) for %s (%d)",
+            String info =  String.format("Logged in as %s (%d) for %s (%d)",
                     data.getString("username"),
                     data.getInt("userID"),
                     data.getString("accountName"),
                     data.getInt("accountID")
             );
+            return info;
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
+            return "";
+        } catch (NullPointerException e) {
+            Log.i("API Error", "Null from HTTP request, likely a timeout.");
             return "";
         }
     }
@@ -167,6 +188,9 @@ public class TimeTracksAPI {
             return json.getString("status").equals(SUCCESS);
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
+            return false;
+        } catch (NullPointerException e) {
+            Log.i("API Error", "Null from HTTP request, likely a timeout.");
             return false;
         }
     }

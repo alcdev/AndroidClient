@@ -34,6 +34,10 @@
             android:name="com.swtracks.timetracks.SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
+        <activity
+            android:name="com.swtracks.timetracks.HomeActivity"
+            android:label="@string/title_activity_home" >
+        </activity>
     </application>
 
 </manifest>

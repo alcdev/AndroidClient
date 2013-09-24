@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -24,20 +23,6 @@ import android.widget.TextView;
  * well.
  */
 public class LoginActivity extends Activity {
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-//    private static final String[] DUMMY_CREDENTIALS = new String[]{
-//            "foo@example.com:hello",
-//            "bar@example.com:world"
-//    };
-
-    /**
-     * The default username to populate the username field with.
-     */
-//    public static final String EXTRA_EMAIL = "com.example.android.authenticatordemo.extra.EMAIL";
-
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -70,7 +55,6 @@ public class LoginActivity extends Activity {
         mAccountView = (EditText) findViewById(R.id.account);
         mAccountView.setText(mAccount);
 
-        //mUsername = getIntent().getStringExtra(EXTRA_EMAIL);
         mUsernameView = (EditText) findViewById(R.id.username);
         mUsernameView.setText(mUsername);
 

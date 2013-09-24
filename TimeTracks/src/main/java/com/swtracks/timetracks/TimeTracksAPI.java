@@ -111,18 +111,18 @@ public class TimeTracksAPI {
         }
     }
 
-    public Boolean LogLocation(Double longitude, Double latitude, String deviceId, String deviceSerial) {
+    public Boolean LogLocation(Double longitude, Double latitude) {
+        if (device.isEmpty()) return false;
 
         List<NameValuePair> postData = new ArrayList<NameValuePair>();
         postData.add(new BasicNameValuePair("lat", longitude.toString()));
         postData.add(new BasicNameValuePair("lng", latitude.toString()));
-
-        // TODO: fix
-        //postData.add(new BasicNameValuePair("id", deviceId));
-        //postData.add(new BasicNameValuePair("serial", deviceSerial));
+        postData.add(new BasicNameValuePair("id", device));
+        postData.add(new BasicNameValuePair("serial", Settings.Secure.ANDROID_ID));
 
         try {
             JSONObject json = parser.getJSONFromUrl(server + "/api/loglocation", postData);
+            Log.i("Log Loc Resp", json.toString());
             return json.getString("status").equals(SUCCESS);
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());

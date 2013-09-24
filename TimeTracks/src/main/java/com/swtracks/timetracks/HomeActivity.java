@@ -1,9 +1,12 @@
 package com.swtracks.timetracks;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
@@ -20,6 +23,7 @@ public class HomeActivity extends Activity {
     private UserInfoTask userInfoTask = null;
     private DeviceListTask deviceListTask = null;
     private RegisterDeviceTask registerDeviceTask = null;
+    //private LocationLoggingTask locationLoggingTask = null;
 
     TimeTracksAPI api;
     TextView userText;
@@ -35,11 +39,28 @@ public class HomeActivity extends Activity {
         settings = getSharedPreferences("userinfo", MODE_PRIVATE);
         deviceID = settings.getString("device", "");
 
+        getUserInfo();
+
         if (deviceID.isEmpty()) {
             getDeviceList();
+        } else {
+            startLocationLogging();
         }
+    }
 
-        getUserInfo();
+    private void startLocationLogging() {
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            LocationListener locationListener = new LocationLogger(HomeActivity.this);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LocationLogger.ONE_MINUTE,
+                    LocationLogger.TWENTY_METERS, locationListener);
+
+            // May not be needed.
+            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        } else {
+            showErrorDialog("GPS Error", "GPS is not enabled.");
+        }
     }
 
 
@@ -88,6 +109,13 @@ public class HomeActivity extends Activity {
         AlertDialog.Builder  builder = new AlertDialog.Builder(HomeActivity.this);
         builder.setTitle(title);
         builder.setMessage(message);
+        builder.setCancelable(false);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                finish();
+            }
+        });
+
         Log.i("Error Dialog", message);
         builder.show();
     }

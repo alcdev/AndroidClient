@@ -27,17 +27,25 @@ public class TimeTracksAPI {
         username = settings.getString("username", "");
         password = settings.getString("password", "");
         account = settings.getString("account", "");
-        device = settings.getString("device", "e5b425b2-a7cd-489f-bf45-ceb28691bd35");
+        device = settings.getString("device", "");
 
         // Set server string.
         // TODO: check that we're using a port.
-        String domain = settings.getString("domain", "http://10.0.2.2");
-        String port = settings.getString("port", "1390");
-        server = String.format("%s:%s", domain, port);
+        String domain = settings.getString("domain", "http://swtracks.com");
+        String port = settings.getString("port", "");
+        server = domain;
+
+        if (!port.isEmpty()) {
+            server = String.format("%s:%s", domain, port);
+        }
+
         Log.i("API Server", server);
     }
 
     public Boolean Autologin(){
+        // We've never once logged in on this device.
+        if (username.isEmpty() && password.isEmpty() && account.isEmpty()) return false;
+
         // See if we are loggedin
         JSONObject json = parser.getJSONFromUrl(server + "/api/userinfo");
         try {
@@ -108,8 +116,10 @@ public class TimeTracksAPI {
         List<NameValuePair> postData = new ArrayList<NameValuePair>();
         postData.add(new BasicNameValuePair("lat", longitude.toString()));
         postData.add(new BasicNameValuePair("lng", latitude.toString()));
-        postData.add(new BasicNameValuePair("id", deviceId));
-        postData.add(new BasicNameValuePair("serial", deviceSerial));
+
+        // TODO: fix
+        //postData.add(new BasicNameValuePair("id", deviceId));
+        //postData.add(new BasicNameValuePair("serial", deviceSerial));
 
         try {
             JSONObject json = parser.getJSONFromUrl(server + "/api/loglocation", postData);
@@ -123,12 +133,12 @@ public class TimeTracksAPI {
         }
     }
 
-    public List<String> GetDevices() {
+    public List<NameValuePair> GetDevices() {
         return GetDevices(false);
     }
 
-    public List<String> GetDevices(boolean all){
-        List<String> devicesIDs = new ArrayList<String>();
+    public List<NameValuePair> GetDevices(boolean all){
+        List<NameValuePair> devicesList = new ArrayList<NameValuePair>();
         JSONObject json;
 
         if (all) {
@@ -143,10 +153,10 @@ public class TimeTracksAPI {
 
             for(int i = 0; i < devices.length(); i++){
                 JSONObject c = devices.getJSONObject(i);
-                devicesIDs.add(c.getString("id"));
+                devicesList.add(new BasicNameValuePair(c.getString("name"), c.getString("id")));
             }
 
-            return devicesIDs;
+            return devicesList;
         } catch (JSONException e) {
             Log.i("API Error", e.getMessage());
             return null;

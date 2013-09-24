@@ -14,6 +14,7 @@ public class SettingsActivity extends Activity {
 
     TextView domainText, portText;
     Button saveButton;
+    Button cancelButton;
     private SharedPreferences settings;
     private String domain, port;
 
@@ -25,6 +26,7 @@ public class SettingsActivity extends Activity {
         domainText = (TextView) findViewById(R.id.domain);
         portText = (TextView) findViewById(R.id.port);
         saveButton = (Button) findViewById(R.id.save_button);
+        cancelButton = (Button) findViewById(R.id.cancel_button);
 
 
         settings = getSharedPreferences("userinfo", MODE_PRIVATE);
@@ -70,10 +72,17 @@ public class SettingsActivity extends Activity {
 
                 editor.commit();
 
-                // Return to main activity.
+                // Always return to the main activity.
                 Intent intent = new Intent(SettingsActivity.this, MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
+                finish();
+            }
+        });
+
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
                 finish();
             }
         });

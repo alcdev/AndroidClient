@@ -1,24 +1,30 @@
 package com.swtracks.timetracks;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
-import android.view.View;
+import android.view.MenuItem;
 import android.widget.TextView;
 
+import org.apache.http.NameValuePair;
+
+import java.util.List;
+
 public class HomeActivity extends Activity {
+    private UserInfoTask userInfoTask = null;
+    private DeviceListTask deviceListTask = null;
+    private RegisterDeviceTask registerDeviceTask = null;
 
     TimeTracksAPI api;
-    private UserLoginTask mAuthTask = null;
     TextView userText;
-    Boolean haveInfo = false;
+    SharedPreferences settings;
+    String deviceID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,10 +32,14 @@ public class HomeActivity extends Activity {
         setContentView(R.layout.activity_home);
         api = new TimeTracksAPI(this);
 
-        if (!haveInfo) {
-            haveInfo = true;
-            getUserInfo();
+        settings = getSharedPreferences("userinfo", MODE_PRIVATE);
+        deviceID = settings.getString("device", "");
+
+        if (deviceID.isEmpty()) {
+            getDeviceList();
         }
+
+        getUserInfo();
     }
 
 
@@ -40,20 +50,72 @@ public class HomeActivity extends Activity {
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                intent = new Intent(this, SettingsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
+                return true;
+            default:
+                return true; //super.onOptionsItemSelected(item);
+        }
+    }
+
+
     public void getUserInfo() {
-        if (mAuthTask != null) {
+        if (userInfoTask != null) {
             return;
         }
 
-        mAuthTask = new UserLoginTask();
-        mAuthTask.execute((Void) null);
+        userInfoTask = new UserInfoTask();
+        userInfoTask.execute((Void) null);
     }
 
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    public void getDeviceList(){
+        if (deviceListTask != null) {
+            return;
+        }
+
+        deviceListTask = new DeviceListTask();
+        deviceListTask.execute((Void) null);
+    }
+
+    public void showErrorDialog(String title, String message) {
+        AlertDialog.Builder  builder = new AlertDialog.Builder(HomeActivity.this);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        Log.i("Error Dialog", message);
+        builder.show();
+    }
+
+    public void showDeviceDialog(final List<NameValuePair> devices) {
+        CharSequence[] charSequenceItems = new CharSequence[devices.size()];
+        AlertDialog.Builder  builder = new AlertDialog.Builder(HomeActivity.this);
+
+        for(int i = 0; i < devices.size(); i++) {
+            charSequenceItems[i] = devices.get(i).getName();
+        }
+
+        builder.setTitle("Register Device");
+        builder.setItems(charSequenceItems, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int i) {
+                if (registerDeviceTask != null) {
+                    return;
+                }
+
+                deviceID = devices.get(i).getValue();
+                registerDeviceTask = new RegisterDeviceTask();
+                registerDeviceTask.execute((Void) null);
+            }
+        });
+        builder.show();
+    }
+
+    public class UserInfoTask extends AsyncTask<Void, Void, Boolean> {
         String text;
         @Override
         protected Boolean doInBackground(Void... params) {
@@ -65,7 +127,7 @@ public class HomeActivity extends Activity {
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
+            userInfoTask = null;
             userText = (TextView) findViewById(R.id.userText);
 
             if (!text.isEmpty()){
@@ -78,7 +140,76 @@ public class HomeActivity extends Activity {
 
         @Override
         protected void onCancelled() {
-            mAuthTask = null;
+            userInfoTask = null;
+        }
+    }
+
+    public class DeviceListTask extends AsyncTask<Void, Void, Boolean> {
+        List<NameValuePair> devices;
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            devices = api.GetDevices();
+
+            // Doesn't matter what we return.
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            deviceListTask = null;
+
+            if (devices != null) {
+                showDeviceDialog(devices);
+            } else {
+                showErrorDialog("Register Device", "No unregistered devices found.");
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            deviceListTask = null;
+        }
+    }
+
+    public class RegisterDeviceTask extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            if (deviceID.isEmpty()) {
+                return false;
+            }
+
+            if (api.RegisterDevice(deviceID))
+            {
+                // Save the device ID to settings.
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("device", deviceID);
+                editor.commit();
+                return true;
+            }
+
+
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            registerDeviceTask = null;
+
+            if (success) {
+                // just relaunch the activity.
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
+            } else {
+                showErrorDialog("Register Device", "Error registering device.");
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            registerDeviceTask = null;
         }
     }
 }

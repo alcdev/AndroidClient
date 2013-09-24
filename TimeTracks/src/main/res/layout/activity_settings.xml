@@ -30,11 +30,22 @@
         android:hint="@string/prompt_port"
         android:inputType="number" />
 
+
     <Button android:id="@+id/save_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="@string/action_save_settings"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:layout_gravity="right" />
+
+
+    <Button android:id="@+id/cancel_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/action_cancel_settings"
         android:paddingLeft="32dp"
         android:paddingRight="32dp"
         android:layout_gravity="right" />
